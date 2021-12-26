@@ -41,17 +41,17 @@ export function initLifecycle (vm: Component) {
     parent.$children.push(vm)
   }
 
-  vm.$parent = parent
-  vm.$root = parent ? parent.$root : vm
+  vm.$parent = parent  // 父组件
+  vm.$root = parent ? parent.$root : vm  // 根组件
 
-  vm.$children = []
-  vm.$refs = {}
+  vm.$children = []  // 初始化孩子组件属性
+  vm.$refs = {}  // 初始绑定节点属性
 
   vm._watcher = null
   vm._inactive = null
   vm._directInactive = false
-  vm._isMounted = false
-  vm._isDestroyed = false
+  vm._isMounted = false  // 是否被挂载
+  vm._isDestroyed = false // 是否被销毁
   vm._isBeingDestroyed = false
 }
 
@@ -66,9 +66,13 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // based on the rendering backend used.
     if (!prevVnode) {
       // initial render
+      // 初始化渲染
+      // vm.$el是真实dom
+      // prevVnode虚拟dom
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates
+      // 更新渲染
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
     restoreActiveInstance()
@@ -145,6 +149,7 @@ export function mountComponent (
 ): Component {
   vm.$el = el
   if (!vm.$options.render) {
+    // 如果options中没有render，则新建空白虚拟DOM
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
@@ -164,6 +169,7 @@ export function mountComponent (
       }
     }
   }
+  // beforeMount生命周期钩子函数
   callHook(vm, 'beforeMount')
 
   let updateComponent
@@ -186,6 +192,7 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+    // 更新函数
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }
@@ -194,6 +201,8 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // 创建Watcher实例
+  // watcher创建实例过程中，会调用一次更新函数，从而实现页面渲染
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
@@ -207,6 +216,7 @@ export function mountComponent (
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
     vm._isMounted = true
+    // mounted生命周期钩子函数
     callHook(vm, 'mounted')
   }
   return vm
@@ -258,6 +268,7 @@ export function updateChildComponent (
   // update $attrs and $listeners hash
   // these are also reactive so they may trigger child update if the child
   // used them during render
+  // 更新$attrs，$listeners属性
   vm.$attrs = parentVnode.data.attrs || emptyObject
   vm.$listeners = listeners || emptyObject
 
@@ -277,6 +288,7 @@ export function updateChildComponent (
   }
 
   // update listeners
+  // 更新事件绑定
   listeners = listeners || emptyObject
   const oldListeners = vm.$options._parentListeners
   vm.$options._parentListeners = listeners
@@ -334,6 +346,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 调用生命周期钩子
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()

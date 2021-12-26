@@ -46,9 +46,9 @@ export function createElement (
 
 export function _createElement (
   context: Component,
-  tag?: string | Class<Component> | Function | Object,
-  data?: VNodeData,
-  children?: any,
+  tag?: string | Class<Component> | Function | Object,  // 标签
+  data?: VNodeData,  // 节点属性
+  children?: any,  // 孩子节点
   normalizationType?: number
 ): VNode | Array<VNode> {
   if (isDef(data) && isDef((data: any).__ob__)) {
@@ -92,10 +92,13 @@ export function _createElement (
   } else if (normalizationType === SIMPLE_NORMALIZE) {
     children = simpleNormalizeChildren(children)
   }
+  // 核心逻辑
   let vnode, ns
+  // 判断标签类型
   if (typeof tag === 'string') {
-    let Ctor
+    let Ctor  // 构造函数
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    // 判断是不是保留标签：div p span
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn) && data.tag !== 'component') {
@@ -108,8 +111,9 @@ export function _createElement (
         config.parsePlatformTagName(tag), data, children,
         undefined, undefined, context
       )
-    } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
+    } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag) /* 赋值构造函数 */ )) {
       // component
+      // 自定义组件
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
       // unknown or unlisted namespaced elements

@@ -82,6 +82,8 @@ export function genElement (el: ASTElement, state: CodegenState): string {
       }
 
       const children = el.inlineTemplate ? null : genChildren(el, state, true)
+
+      // 调用_c函数
       code = `_c('${el.tag}'${
         data ? `,${data}` : '' // data
       }${

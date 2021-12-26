@@ -10,10 +10,14 @@ export let isUsingMicroTask = false
 const callbacks = []
 let pending = false
 
+// 将callbacks数组中所有回调函数都执行一遍
 function flushCallbacks () {
+  // 状态设为false
   pending = false
+  // 浅复制一份callbacks，然后将callbacks设为空数组
   const copies = callbacks.slice(0)
   callbacks.length = 0
+  // 遍历调用
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
   }
@@ -84,11 +88,14 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+// this.$nextTick()
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 将回调函数cb放入回调函数数组callbacks
   callbacks.push(() => {
     if (cb) {
       try {
+        // 执行回调函数
         cb.call(ctx)
       } catch (e) {
         handleError(e, ctx, 'nextTick')
@@ -99,6 +106,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
   })
   if (!pending) {
     pending = true
+    // 异步执行callbacks任务
     timerFunc()
   }
   // $flow-disable-line

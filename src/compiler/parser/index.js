@@ -205,6 +205,7 @@ export function parse (
     }
   }
 
+  // 核心代码
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -225,6 +226,7 @@ export function parse (
         attrs = guardIESVGBug(attrs)
       }
 
+      // 创建AST语法树
       let element: ASTElement = createASTElement(tag, attrs, currentParent)
       if (ns) {
         element.ns = ns
@@ -281,9 +283,9 @@ export function parse (
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
-        processFor(element)
-        processIf(element)
-        processOnce(element)
+        processFor(element)  // 解析 v-for
+        processIf(element)  // 解析 v-if
+        processOnce(element)  // 解析 v-once
       }
 
       if (!root) {

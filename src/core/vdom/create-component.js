@@ -33,7 +33,9 @@ import {
 } from 'weex/runtime/recycle-list/render-component-template'
 
 // inline hooks to be invoked on component VNodes during patch
+// 组件管理钩子的定义
 const componentVNodeHooks = {
+  // 组件初始化钩子
   init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
       vnode.componentInstance &&
@@ -41,17 +43,28 @@ const componentVNodeHooks = {
       vnode.data.keepAlive
     ) {
       // kept-alive components, treat as a patch
+      // keep-alive 不销毁 直接执行prepatch
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
+      // 创建自定义组件实例
       const child = vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
       )
+
+      /**
+       * 父子组件创建挂载顺序
+       * 创建顺序： 父先子后
+       * 挂载顺序： 子先父后
+       * parent created -> parent beforeMount -> child created -> child beforeMount -> child mount -> parent mount
+       * */
+      // 挂载
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
 
+  // 组件预更新钩子
   prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
     const options = vnode.componentOptions
     const child = vnode.componentInstance = oldVnode.componentInstance
@@ -64,6 +77,7 @@ const componentVNodeHooks = {
     )
   },
 
+  // 组件插入dom节点钩子
   insert (vnode: MountedComponentVNode) {
     const { context, componentInstance } = vnode
     if (!componentInstance._isMounted) {
@@ -84,6 +98,7 @@ const componentVNodeHooks = {
     }
   },
 
+  // 组件销毁钩子
   destroy (vnode: MountedComponentVNode) {
     const { componentInstance } = vnode
     if (!componentInstance._isDestroyed) {
@@ -98,8 +113,9 @@ const componentVNodeHooks = {
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
 
+// 创建自定义组件
 export function createComponent (
-  Ctor: Class<Component> | Function | Object | void,
+  Ctor: Class<Component> | Function | Object | void, // 自定义组件构造函数
   data: ?VNodeData,
   context: Component,
   children: ?Array<VNode>,
@@ -144,6 +160,7 @@ export function createComponent (
     }
   }
 
+  // 处理组件的属性
   data = data || {}
 
   // resolve constructor options in case global mixins are applied after
@@ -156,6 +173,7 @@ export function createComponent (
   }
 
   // extract props
+  // 处理组件属性绑定
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 
   // functional component
@@ -165,6 +183,7 @@ export function createComponent (
 
   // extract listeners, since these needs to be treated as
   // child component listeners instead of DOM listeners
+  // 处理组件事件绑定
   const listeners = data.on
   // replace with listeners with .native modifier
   // so it gets processed during parent component patch.
@@ -183,6 +202,7 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 安装组件管理钩子
   installComponentHooks(data)
 
   // return a placeholder vnode
@@ -222,9 +242,11 @@ export function createComponentInstanceForVnode (
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+  // 创建自定义组件实例
   return new vnode.componentOptions.Ctor(options)
 }
 
+// 管理钩子：合并用户编写的钩子和系统默认的钩子（hooksToMerge）
 function installComponentHooks (data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {

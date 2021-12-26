@@ -24,9 +24,9 @@ export function validateProp (
   propsData: Object,
   vm?: Component
 ): any {
-  const prop = propOptions[key]
-  const absent = !hasOwn(propsData, key)
-  let value = propsData[key]
+  const prop = propOptions[key]  // 获取prop
+  const absent = !hasOwn(propsData, key)  // 判断是否绑定了该属性
+  let value = propsData[key]  // 获取绑定的属性值
   // boolean casting
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {

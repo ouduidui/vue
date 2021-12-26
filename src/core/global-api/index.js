@@ -34,16 +34,16 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // exposed util methods.
   // NOTE: these are not considered part of the public API - avoid relying on
   // them unless you are aware of the risk.
-  Vue.util = {
+  Vue.util = {  // 实现Vue.util
     warn,
     extend,
     mergeOptions,
     defineReactive
   }
 
-  Vue.set = set
-  Vue.delete = del
-  Vue.nextTick = nextTick
+  Vue.set = set  // 实现Vue.set
+  Vue.delete = del  // 实现Vue.delete
+  Vue.nextTick = nextTick  // 实现Vue.nextTick
 
   // 2.6 explicit observable API
   Vue.observable = <T>(obj: T): T => {
@@ -53,7 +53,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   Vue.options = Object.create(null)
   ASSET_TYPES.forEach(type => {
-    Vue.options[type + 's'] = Object.create(null)
+    Vue.options[type + 's'] = Object.create(null)  // 空对象
   })
 
   // this is used to identify the "base" constructor to extend all plain-object
@@ -62,8 +62,8 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   extend(Vue.options.components, builtInComponents)
 
-  initUse(Vue)
-  initMixin(Vue)
-  initExtend(Vue)
-  initAssetRegisters(Vue)
+  initUse(Vue)  // 实现Vue.use函数
+  initMixin(Vue)  // 实现Vue.mixin函数
+  initExtend(Vue)  // 实现Vue.extend函数
+  initAssetRegisters(Vue)  // 注册实现Vue.component、directive、filter
 }

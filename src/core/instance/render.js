@@ -17,6 +17,7 @@ import VNode, { createEmptyVNode } from '../vdom/vnode'
 import { isUpdatingChildComponent } from './lifecycle'
 
 export function initRender (vm: Component) {
+  // 初始化组件虚拟dom属性
   vm._vnode = null // the root of the child tree
   vm._staticTrees = null // v-once cached trees
   const options = vm.$options
@@ -28,9 +29,11 @@ export function initRender (vm: Component) {
   // so that we get proper render context inside it.
   // args order: tag, data, children, normalizationType, alwaysNormalize
   // internal version is used by render functions compiled from templates
+  // 由编译器生成的渲染函数调用
   vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
   // normalization is always applied for the public version, used in
   // user-written render functions.
+  // render函数中的参数h
   vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
 
   // $attrs & $listeners are exposed for easier HOC creation.
@@ -38,6 +41,7 @@ export function initRender (vm: Component) {
   const parentData = parentVnode && parentVnode.data
 
   /* istanbul ignore else */
+  // 定义$attrs和$listeners的响应式
   if (process.env.NODE_ENV !== 'production') {
     defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
       !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
@@ -62,10 +66,12 @@ export function renderMixin (Vue: Class<Component>) {
   // install runtime convenience helpers
   installRenderHelpers(Vue.prototype)
 
+  // 实现$nextTick
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }
 
+  // 实现_render
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
@@ -80,6 +86,7 @@ export function renderMixin (Vue: Class<Component>) {
 
     // set parent vnode. this allows render functions to have access
     // to the data on the placeholder node.
+    // 设置父级虚拟dom，为了保证render函数能够执行
     vm.$vnode = _parentVnode
     // render self
     let vnode
@@ -108,10 +115,12 @@ export function renderMixin (Vue: Class<Component>) {
       currentRenderingInstance = null
     }
     // if the returned array contains only a single node, allow it
+    // 保证vnode为单一根节点
     if (Array.isArray(vnode) && vnode.length === 1) {
       vnode = vnode[0]
     }
     // return empty vnode in case the render function errored out
+    // 判断类型 如果vnode不是虚拟dom，就创建一个空的虚拟dom
     if (!(vnode instanceof VNode)) {
       if (process.env.NODE_ENV !== 'production' && Array.isArray(vnode)) {
         warn(
@@ -123,6 +132,7 @@ export function renderMixin (Vue: Class<Component>) {
       vnode = createEmptyVNode()
     }
     // set parent
+    // 为新的虚拟DOM赋值父级虚拟DOM
     vnode.parent = _parentVnode
     return vnode
   }

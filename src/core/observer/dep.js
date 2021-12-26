@@ -11,23 +11,26 @@ let uid = 0
  * directives subscribing to it.
  */
 export default class Dep {
-  static target: ?Watcher;
+  static target: ?Watcher;  // 依赖收集时的watcher引用
   id: number;
-  subs: Array<Watcher>;
+  subs: Array<Watcher>;  // watcher数组
 
   constructor () {
     this.id = uid++
     this.subs = []
   }
 
+  // 添加watcher实例
   addSub (sub: Watcher) {
     this.subs.push(sub)
   }
 
+  // 删除watcher实例
   removeSub (sub: Watcher) {
     remove(this.subs, sub)
   }
 
+  // 通知更新
   depend () {
     if (Dep.target) {
       Dep.target.addDep(this)
@@ -36,6 +39,7 @@ export default class Dep {
 
   notify () {
     // stabilize the subscriber list first
+    // 对this.subs进行浅拷贝
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
@@ -43,6 +47,7 @@ export default class Dep {
       // order
       subs.sort((a, b) => a.id - b.id)
     }
+    // 遍历关联的所有watcher,通知每一个watcher更新
     for (let i = 0, l = subs.length; i < l; i++) {
       subs[i].update()
     }

@@ -41,17 +41,20 @@ export class Observer {
 
   constructor (value: any) {
     this.value = value
-    this.dep = new Dep()
+    this.dep = new Dep()  // 实例化一个总依赖 对象如果有动态新增或删除属性时通知更新 or 数组有新元素增加或删除通知更新
     this.vmCount = 0
-    def(value, '__ob__', this)
-    if (Array.isArray(value)) {
+    def(value, '__ob__', this)  // 在getter中可以通过__ob__获得observer实例
+    if (Array.isArray(value)) {   // 数组处理
+      // 覆盖对象原型的方法
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
+      // 数据响应式处理
       this.observeArray(value)
     } else {
+      // 对象处理
       this.walk(value)
     }
   }
@@ -63,6 +66,7 @@ export class Observer {
    */
   walk (obj: Object) {
     const keys = Object.keys(obj)
+    // 遍历所有属性，执行defineReactive
     for (let i = 0; i < keys.length; i++) {
       defineReactive(obj, keys[i])
     }
@@ -111,6 +115,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
     return
   }
+  // 每个对象一个Observer实例，作用是判断对象类型做相应处理
   let ob: Observer | void
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
@@ -121,6 +126,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     Object.isExtensible(value) &&
     !value._isVue
   ) {
+    // 初始化创建Observer观察者实例
     ob = new Observer(value)
   }
   if (asRootData && ob) {
@@ -132,6 +138,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 /**
  * Define a reactive property on an Object.
  */
+// 给一个对象定义一个响应式属性
 export function defineReactive (
   obj: Object,
   key: string,
@@ -139,8 +146,10 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  // dep和key一对一对应依赖  如果key的值变化，通知更新
   const dep = new Dep()
 
+  // 判断对象原来是否存在这个key
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -153,18 +162,22 @@ export function defineReactive (
     val = obj[key]
   }
 
+  // 递归遍历对象属性，一一执行响应式处理
   let childOb = !shallow && observe(val)
+  // 定义当前对象getter/setter
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
+    // getter负责依赖收集
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
-        dep.depend()
+        dep.depend() // dep和watcher互相添加映射关系
+        // 若存在子observer，则依赖也追加到子ob
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
-            dependArray(value)
+            dependArray(value) // 数组需特殊处理
           }
         }
       }
@@ -185,10 +198,10 @@ export function defineReactive (
       if (setter) {
         setter.call(obj, newVal)
       } else {
-        val = newVal
+        val = newVal  // 更新值
       }
-      childOb = !shallow && observe(newVal)
-      dep.notify()
+      childOb = !shallow && observe(newVal) // 如果newVal是对象，再次做响应式处理
+      dep.notify()  // 通知更新
     }
   })
 }
@@ -225,7 +238,9 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     target[key] = val
     return val
   }
+  // 响应式处理
   defineReactive(ob.value, key, val)
+  // 依赖收集
   ob.dep.notify()
   return val
 }
@@ -254,10 +269,12 @@ export function del (target: Array<any> | Object, key: any) {
   if (!hasOwn(target, key)) {
     return
   }
+  // 删除对应值
   delete target[key]
   if (!ob) {
     return
   }
+  // 通知更新
   ob.dep.notify()
 }
 
@@ -265,6 +282,7 @@ export function del (target: Array<any> | Object, key: any) {
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
  */
+// 数组中每一项也需要收集依赖
 function dependArray (value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {
     e = value[i]

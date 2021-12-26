@@ -29,6 +29,7 @@ export function initInjections (vm: Component) {
           )
         })
       } else {
+        // 对结果进行响应式处理（主要是执行代理）
         defineReactive(vm, key, result[key])
       }
     })
@@ -55,6 +56,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
           result[key] = source._provided[provideKey]
           break
         }
+        // 向上递归
         source = source.$parent
       }
       if (!source) {

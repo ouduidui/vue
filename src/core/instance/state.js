@@ -36,6 +36,7 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// 数据代理，实现在vm可以对值的读写
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -49,11 +50,13 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
+  // 初始化顺序 props -> methods -> data -> computed -> watch
   if (opts.props) initProps(vm, opts.props)
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
     initData(vm)
   } else {
+    // 没有data数据的话，默认为{}
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
@@ -63,8 +66,8 @@ export function initState (vm: Component) {
 }
 
 function initProps (vm: Component, propsOptions: Object) {
-  const propsData = vm.$options.propsData || {}
-  const props = vm._props = {}
+  const propsData = vm.$options.propsData || {}  // 获取组件属性
+  const props = vm._props = {}  // 或许组件props选项
   // cache prop keys so that future props updates can iterate using Array
   // instead of dynamic object key enumeration.
   const keys = vm.$options._propKeys = []
@@ -73,9 +76,11 @@ function initProps (vm: Component, propsOptions: Object) {
   if (!isRoot) {
     toggleObserving(false)
   }
+
+  // 遍历绑定属性
   for (const key in propsOptions) {
-    keys.push(key)
-    const value = validateProp(key, propsOptions, propsData, vm)
+    keys.push(key)  // 将key绑定
+    const value = validateProp(key, propsOptions, propsData, vm)  // 进行数据校验
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)
@@ -98,11 +103,13 @@ function initProps (vm: Component, propsOptions: Object) {
         }
       })
     } else {
+      // 响应式处理
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 执行数据代理，可以直接在vm的getter调用到
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }
@@ -124,6 +131,7 @@ function initData (vm: Component) {
     )
   }
   // proxy data on instance
+  // 避免命名冲突
   const keys = Object.keys(data)
   const props = vm.$options.props
   const methods = vm.$options.methods
@@ -145,10 +153,12 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      // 代理
       proxy(vm, `_data`, key)
     }
   }
   // observe data
+  // 遍历data 做响应式处理
   observe(data, true /* asRootData */)
 }
 
@@ -173,8 +183,10 @@ function initComputed (vm: Component, computed: Object) {
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
 
+  // 遍历computed
   for (const key in computed) {
     const userDef = computed[key]
+    // 获取getter
     const getter = typeof userDef === 'function' ? userDef : userDef.get
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
@@ -185,6 +197,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // 建立Watcher实例
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -241,6 +254,7 @@ export function defineComputed (
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 依赖搜集
 function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
@@ -323,6 +337,7 @@ export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
   // the object here.
+  // 定义了只读属性$data和$props
   const dataDef = {}
   dataDef.get = function () { return this._data }
   const propsDef = {}
@@ -342,9 +357,11 @@ export function stateMixin (Vue: Class<Component>) {
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
+  // 定义$set和$delete
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 
+  // 定义$watch
   Vue.prototype.$watch = function (
     expOrFn: string | Function,
     cb: any,

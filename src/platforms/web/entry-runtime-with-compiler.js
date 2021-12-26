@@ -14,11 +14,13 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
+// 扩展 $mount
 const mount = Vue.prototype.$mount
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+  // 获取节点
   el = el && query(el)
 
   /* istanbul ignore if */
@@ -29,11 +31,15 @@ Vue.prototype.$mount = function (
     return this
   }
 
+  // 获取用户配置选项
   const options = this.$options
   // resolve template/el and convert to render function
+  // 查找render选项，若不存在render选项则将template/el的设置转换为render函数
   if (!options.render) {
+    // 获取template选项
     let template = options.template
     if (template) {
+      // 解析template选项
       if (typeof template === 'string') {
         if (template.charAt(0) === '#') {
           template = idToTemplate(template)
@@ -54,14 +60,17 @@ Vue.prototype.$mount = function (
         return this
       }
     } else if (el) {
+      // 否则解析el选项
       template = getOuterHTML(el)
     }
+    // 获取到html模板字符串之后，执行编译过程
     if (template) {
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
 
+      // 编译template为render函数
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,
@@ -69,7 +78,7 @@ Vue.prototype.$mount = function (
         delimiters: options.delimiters,
         comments: options.comments
       }, this)
-      options.render = render
+      options.render = render  // 然后将编译完的render函数赋值到options.render
       options.staticRenderFns = staticRenderFns
 
       /* istanbul ignore if */
@@ -79,6 +88,7 @@ Vue.prototype.$mount = function (
       }
     }
   }
+  // 执行挂载
   return mount.call(this, el, hydrating)
 }
 

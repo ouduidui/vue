@@ -25,6 +25,7 @@ let index = 0
 /**
  * Reset the scheduler's state.
  */
+// 重置状态
 function resetSchedulerState () {
   index = queue.length = activatedChildren.length = 0
   has = {}
@@ -81,17 +82,21 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  // 按照id的顺序执行watcher更新
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 按照id的顺序执行watcher更新
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
       watcher.before()
     }
     id = watcher.id
+    // 将正在更新的watcher从映射表中清空
     has[id] = null
+    // 执行更新函数
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -114,10 +119,13 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  // 重置队列和状态
   resetSchedulerState()
 
   // call component updated and activated hooks
+  // 通知keepAlive钩子
   callActivatedHooks(activatedQueue)
+  // 调用组件update钩子
   callUpdatedHooks(updatedQueue)
 
   // devtool hook
@@ -161,19 +169,24 @@ function callActivatedHooks (queue) {
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
  */
+// 将watcher插入队列
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  // 去重：单个watcher只入队一次
   if (has[id] == null) {
     has[id] = true
+    // 判断是否正在遍历更新
     if (!flushing) {
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
+      // 如果正在遍历更新的话，将watcher按照id顺序插入
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
+      // 将当前watcher插入队列中i+1位置
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
@@ -184,6 +197,7 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 异步方式将flushSchedulerQueue放入微任务队列
       nextTick(flushSchedulerQueue)
     }
   }
